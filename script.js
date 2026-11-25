@@ -64,7 +64,7 @@ $$(".command-list a").forEach(a=>a.addEventListener("click",()=>cmd.close()));
   lcValue.textContent=total.toLocaleString('en-IN');
   const rank=payload.data.matchedUser.profile?.ranking;
   lcDetail.textContent=`LIVE · ${easy} Easy / ${medium} Medium / ${hard} Hard${rank?` · Rank ${Number(rank).toLocaleString('en-IN')}`:''}`;
- }catch(err){lcDetail.textContent='Resume snapshot · live stats temporarily unavailable';setStatus(lcStatus,'PROFILE LINKED · SNAPSHOT',false);}
+ }catch(err){lcDetail.textContent='Resume snapshot · live stats temporarily unavailable';}
  // Community-maintained GFG stats endpoint; the profile link remains the authoritative destination.
  try{
   let payload;
@@ -83,61 +83,61 @@ $$(".command-list a").forEach(a=>a.addEventListener("click",()=>cmd.close()));
   gfgValue.textContent=total.toLocaleString('en-IN');
   const parts=[['School',data.School??data.school],['Basic',data.Basic??data.basic],['Easy',data.Easy??data.easy],['Medium',data.Medium??data.medium],['Hard',data.Hard??data.hard]].filter(x=>x[1]!==undefined&&x[1]!==null).map(x=>`${x[0]} ${x[1]}`);
   gfgDetail.textContent='LIVE · '+(parts.length?parts.join(' / '):'Public profile statistics');
- }catch(err){gfgDetail.textContent='Resume snapshot · live stats temporarily unavailable';setStatus(gfgStatus,'PROFILE LINKED · SNAPSHOT',false);}
+ }catch(err){gfgDetail.textContent='Resume snapshot · live stats temporarily unavailable';}
 })();
 
-// Public GitHub data: uses GitHub's unauthenticated public REST API.
-(async function loadGitHubSignals(){
- const status=document.getElementById("githubStatus");
- const reposEl=document.getElementById("githubRepos");
- const eventsEl=document.getElementById("githubEvents");
- const followersEl=document.getElementById("githubFollowers");
- const list=document.getElementById("repoList");
- const updated=document.getElementById("githubUpdated");
- if(!status||!list)return;
- const username=(window.PORTFOLIO_CONFIG&&window.PORTFOLIO_CONFIG.githubUsername)||"kritika38";
- try{
-   const [userRes,repoRes,eventRes]=await Promise.all([
-     fetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
-     fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=6&type=owner`),
-     fetch(`https://api.github.com/users/${encodeURIComponent(username)}/events/public?per_page=30`)
-   ]);
-   if(!userRes.ok||!repoRes.ok||!eventRes.ok)throw new Error("GitHub API response unavailable");
-   const [user,repos,events]=await Promise.all([userRes.json(),repoRes.json(),eventRes.json()]);
-   reposEl.textContent=Number(user.public_repos||0).toLocaleString("en-IN");
-   followersEl.textContent=`${Number(user.followers||0)} followers · ${Number(user.following||0)} following`;
-   eventsEl.textContent=Number(events.length||0).toLocaleString("en-IN");
-   status.classList.remove("error");status.innerHTML="<i></i> LIVE · GITHUB PUBLIC API";
-   updated.textContent="Updated from public GitHub data";
-   const safeRepos=Array.isArray(repos)?repos.filter(r=>!r.fork).slice(0,6):[];
-   list.innerHTML=safeRepos.length?safeRepos.map(r=>`<a class="repo-item" href="${r.html_url}" target="_blank" rel="noreferrer"><strong>${escapeHTML(r.name)}</strong><p>${escapeHTML(r.description||"Public repository · Explore the code")}</p><div class="repo-meta"><span>${escapeHTML(r.language||"Code")}</span><span>★ ${Number(r.stargazers_count||0)}</span></div></a>`).join(""):'<div class="repo-placeholder">No public repositories found yet. Visit the GitHub profile to explore.</div>';
- }catch(err){
-   status.classList.add("error");status.innerHTML="<i></i> GITHUB DATA UNAVAILABLE";
-   reposEl.textContent="—";eventsEl.textContent="—";
-   followersEl.textContent="Check GitHub profile directly";
-   list.innerHTML='<div class="repo-placeholder">GitHub API could not be reached right now. The rest of the portfolio is still available — open the GitHub profile to browse repositories.</div>';
-   updated.textContent="Live data unavailable; try again later";
- }
-})();
 function escapeHTML(value){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
-// Contact form submits to the Vercel serverless endpoint. Configure email secrets in Vercel.
+// Contact form: Web3Forms public Access Key (safe for client-side use).
 const contactForm=document.getElementById("contactForm");
 if(contactForm){
+ const status=document.getElementById("formStatus");
+ const button=contactForm.querySelector('button[type="submit"]');
+ const fallback=document.getElementById("emailFallback");
+ const WEB3FORMS_ACCESS_KEY="3bf980b7-c6d0-4065-9c4b-739705c81d27";
+ const setStatus=(message,kind="")=>{status.textContent=message;status.dataset.state=kind;};
  contactForm.addEventListener("submit",async e=>{
   e.preventDefault();
-  const status=document.getElementById("formStatus"),button=contactForm.querySelector('button[type="submit"]');
   const data=Object.fromEntries(new FormData(contactForm).entries());
   if(data.company_website)return;
-  button.disabled=true;status.textContent="Sending securely…";
+  const name=String(data.name||"").trim(),email=String(data.email||"").trim(),message=String(data.message||"").trim();
+  if(!name||!email||!message){setStatus("Please complete all three fields.","error");return;}
+  const mailto=`mailto:kritika.bti@gmail.com?subject=${encodeURIComponent(`Portfolio enquiry from ${name}`)}&body=${encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`)}`;
+  fallback.href=mailto;
+  button.disabled=true;button.classList.add("is-loading");
+  button.innerHTML='<span class="send-icon">…</span> Sending message';
+  setStatus("Sending your message…");
   try{
-   const response=await fetch("/api/contact",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+   const controller=new AbortController();
+   const timeout=setTimeout(()=>controller.abort(),15000);
+   let response;
+   try{
+    response=await fetch("https://api.web3forms.com/submit",{
+     method:"POST",
+     headers:{"Content-Type":"application/json","Accept":"application/json"},
+     body:JSON.stringify({
+      access_key:WEB3FORMS_ACCESS_KEY,
+      name,
+      email,
+      message,
+      subject:`New portfolio enquiry from ${name}`,
+      from_name:"Kritika Portfolio"
+     }),
+     signal:controller.signal
+    });
+   }finally{clearTimeout(timeout);}
    const result=await response.json().catch(()=>({}));
-   if(!response.ok)throw new Error(result.error||"Message could not be sent.");
-   status.textContent="Message sent. Thank you — I'll be in touch!";
+   if(!response.ok||!result.success)throw new Error(result.message||result.body?.message||`Email service returned ${response.status}.`);
+   setStatus("Your message was sent successfully. Thank you!","success");
    contactForm.reset();
+   fallback.href="mailto:kritika.bti@gmail.com?subject=Portfolio%20enquiry";
   }catch(error){
-   status.textContent=error.message.includes("not configured")?"Contact email is not configured yet. Please use the direct email link below.":"Could not send right now. Email me at kritika.bti@gmail.com.";
-  }finally{button.disabled=false}
+   const detail=error.name==="AbortError"?"The request took too long.":error.message||"The email service is temporarily unavailable.";
+   setStatus(`${detail} Please try again or use the direct email link below.`,"error");
+   fallback.classList.add("email-fallback-highlight");
+  }finally{
+   button.disabled=false;button.classList.remove("is-loading");
+   button.innerHTML='<span class="send-icon">↗</span> Send message';
+  }
  });
 }
