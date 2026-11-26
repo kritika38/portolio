@@ -164,3 +164,27 @@ button,a,input,textarea{-webkit-tap-highlight-color:transparent}button:focus-vis
 .credential-codechef .credential-mark{color:#e6a66e}
 @media(max-width:850px){.credential-grid{grid-template-columns:1fr 1fr}.credential-card:last-child{grid-column:span 2;min-height:270px}}
 @media(max-width:560px){.credential-grid{grid-template-columns:1fr}.credential-card:last-child{grid-column:auto}.credential-card{min-height:270px}.credential-bottom{font-size:7px}}
+
+/* LeetCode badges */
+.badge-section{border-top:1px solid var(--line);margin-top:58px;padding-top:42px}
+.badge-head h3{font:600 clamp(32px,4vw,48px)/1.12 var(--display);letter-spacing:-.065em;margin:18px 0 10px}
+.badge-head h3 em{font-family:Georgia,serif;color:var(--accent);font-weight:400}
+.badge-head>p{font-size:12px;line-height:1.8;color:var(--muted);margin:0;max-width:460px}
+.badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:28px}
+.badge-card{padding:0;background:var(--panel);border:1px solid var(--line);cursor:zoom-in;color:var(--text);text-align:left;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+.badge-card:hover,.badge-card:focus-visible{transform:translateY(-5px);border-color:var(--accent);box-shadow:0 14px 40px color-mix(in srgb,var(--accent) 12%,transparent);outline:none}
+.badge-card img{display:block;width:100%;height:auto;background:#161312}
+.badge-meta{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-top:1px solid var(--line)}
+.badge-meta b{font:600 14px var(--display);letter-spacing:-.02em}
+.badge-meta span{font:8px var(--mono);letter-spacing:.12em;color:var(--accent)}
+.badge-dialog{border:1px solid var(--line);background:var(--panel);padding:14px;max-width:min(92vw,440px);width:100%;color:var(--text)}
+.badge-dialog::backdrop{background:#000b;backdrop-filter:blur(4px)}
+.badge-dialog img{display:block;width:100%;height:auto;max-height:82vh;object-fit:contain}
+@media(max-width:850px){.badge-grid{grid-template-columns:1fr 1fr}.badge-card:last-child{grid-column:span 2}}
+@media(max-width:560px){.badge-grid{grid-template-columns:1fr}.badge-card:last-child{grid-column:auto}}
+
+/* badges inside coding profiles panel */
+.badge-label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:26px}
+.badge-label span{font:9px var(--mono);letter-spacing:.13em;color:var(--accent)}
+.badge-label small{font:8px var(--mono);letter-spacing:.08em;color:var(--faint)}
+.profiles-panel .badge-grid{margin-top:14px;margin-bottom:6px}

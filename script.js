@@ -141,3 +141,9 @@ if(contactForm){
   }
  });
 }
+
+// LeetCode badge lightbox
+(function(){const d=document.getElementById("badgeDialog");if(!d)return;const img=document.getElementById("badgeFull");
+document.querySelectorAll(".badge-card").forEach(b=>b.addEventListener("click",()=>{img.src=b.dataset.badge;img.alt=b.dataset.alt;d.showModal()}));
+document.getElementById("badgeClose").addEventListener("click",()=>d.close());
+d.addEventListener("click",e=>{if(e.target===d)d.close()});})();
